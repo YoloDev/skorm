@@ -1,0 +1,32 @@
+[
+    Triple((
+        subject: Named(Namespaced("test", "")),
+        predicate: Named(Iri("http://www.w3.org/1999/02/22-rdf-syntax-ns#type")),
+        object: Named(Namespaced("foo", "")),
+    )),
+    Triple((
+        subject: Named(Namespaced("my", "is")),
+        predicate: Named(Iri("http://www.w3.org/1999/02/22-rdf-syntax-ns#type")),
+        object: Named(Namespaced("my", "other")),
+    )),
+    Triple((
+        subject: Named(Namespaced("abcdef", "is")),
+        predicate: Named(Iri("http://www.w3.org/1999/02/22-rdf-syntax-ns#type")),
+        object: Named(Namespaced("abcdef", "other")),
+    )),
+    Triple((
+        subject: Named(Namespaced("a", "i")),
+        predicate: Named(Iri("http://www.w3.org/1999/02/22-rdf-syntax-ns#type")),
+        object: Named(Namespaced("a", "b")),
+    )),
+    Triple((
+        subject: Named(Namespaced("ai", "is")),
+        predicate: Named(Iri("http://www.w3.org/1999/02/22-rdf-syntax-ns#type")),
+        object: Named(Namespaced("ai", "bi")),
+    )),
+    Triple((
+        subject: Named(Namespaced("abc", "")),
+        predicate: Named(Iri("http://www.w3.org/1999/02/22-rdf-syntax-ns#type")),
+        object: Named(Namespaced("def", "")),
+    )),
+]

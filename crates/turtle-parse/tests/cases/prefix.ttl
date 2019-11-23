@@ -1,0 +1,11 @@
+test: a foo: .
+
+my:is a my:other .
+
+abcdef:is a abcdef:other .
+
+a:i a a:b .
+
+ai:is a ai:bi .
+
+abc: a def: .

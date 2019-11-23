@@ -1,0 +1,2 @@
+:Mary a foaf:Person ;
+      :owns ( :cat1 :cat2 ) .

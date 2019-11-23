@@ -1,0 +1,10 @@
+[
+    Prefix((
+        prefix: "",
+        url: "http://demo.foo/",
+    )),
+    Prefix((
+        prefix: "bar",
+        url: "http://demo.foo/bar/",
+    )),
+]

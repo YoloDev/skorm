@@ -1,0 +1,196 @@
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug unit tests in library 'skorm-core'",
+      "cargo": {
+        "args": [
+          "test",
+          "--no-run",
+          "--lib",
+          "--package=skorm-core"
+        ],
+        "filter": {
+          "name": "skorm-core",
+          "kind": "lib"
+        }
+      },
+      "args": [],
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug unit tests in library 'skorm-parse'",
+      "cargo": {
+        "args": [
+          "test",
+          "--no-run",
+          "--lib",
+          "--package=skorm-parse"
+        ],
+        "filter": {
+          "name": "skorm-parse",
+          "kind": "lib"
+        }
+      },
+      "args": [],
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug unit tests in library 'skorm-store'",
+      "cargo": {
+        "args": [
+          "test",
+          "--no-run",
+          "--lib",
+          "--package=skorm-store"
+        ],
+        "filter": {
+          "name": "skorm-store",
+          "kind": "lib"
+        }
+      },
+      "args": [],
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug unit tests in library 'skorm-turtle-parse'",
+      "cargo": {
+        "args": [
+          "test",
+          "--no-run",
+          "--lib",
+          "--package=skorm-turtle-parse"
+        ],
+        "filter": {
+          "name": "skorm-turtle-parse",
+          "kind": "lib"
+        }
+      },
+      "args": [],
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug integration test 'cases'",
+      "cargo": {
+        "args": [
+          "test",
+          "--no-run",
+          "--test=cases",
+          "--package=skorm-turtle-parse"
+        ],
+        "filter": {
+          "name": "cases",
+          "kind": "test"
+        }
+      },
+      "args": [],
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug unit tests in library 'xtask'",
+      "cargo": {
+        "args": [
+          "test",
+          "--no-run",
+          "--lib",
+          "--package=xtask"
+        ],
+        "filter": {
+          "name": "xtask",
+          "kind": "lib"
+        }
+      },
+      "args": [],
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug executable 'xtask'",
+      "cargo": {
+        "args": [
+          "build",
+          "--bin=xtask",
+          "--package=xtask"
+        ],
+        "filter": {
+          "name": "xtask",
+          "kind": "bin"
+        }
+      },
+      "args": [],
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug unit tests in executable 'xtask'",
+      "cargo": {
+        "args": [
+          "test",
+          "--no-run",
+          "--bin=xtask",
+          "--package=xtask"
+        ],
+        "filter": {
+          "name": "xtask",
+          "kind": "bin"
+        }
+      },
+      "args": [],
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug executable 'pre-commit'",
+      "cargo": {
+        "args": [
+          "build",
+          "--bin=pre-commit",
+          "--package=xtask"
+        ],
+        "filter": {
+          "name": "pre-commit",
+          "kind": "bin"
+        }
+      },
+      "args": [],
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug unit tests in executable 'pre-commit'",
+      "cargo": {
+        "args": [
+          "test",
+          "--no-run",
+          "--bin=pre-commit",
+          "--package=xtask"
+        ],
+        "filter": {
+          "name": "pre-commit",
+          "kind": "bin"
+        }
+      },
+      "args": [],
+      "cwd": "${workspaceFolder}"
+    }
+  ]
+}

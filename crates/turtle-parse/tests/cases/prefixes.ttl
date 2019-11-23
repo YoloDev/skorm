@@ -1,0 +1,2 @@
+@prefix : <http://demo.foo/> .
+PREFIX bar: <http://demo.foo/bar/>

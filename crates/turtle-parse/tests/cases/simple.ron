@@ -1,0 +1,22 @@
+[
+    Triple((
+        subject: Named(Iri("https://yolodev.github.io/semantic-rpg/schema/Source")),
+        predicate: Named(Iri("http://www.w3.org/1999/02/22-rdf-syntax-ns#type")),
+        object: Named(Iri("http://www.w3.org/2000/01/rdf-schema#Class")),
+    )),
+    Triple((
+        subject: Named(Iri("https://yolodev.github.io/semantic-rpg/schema/Source")),
+        predicate: Named(Iri("http://www.w3.org/2000/01/rdf-schema#label")),
+        object: Literal(Simple("Source")),
+    )),
+    Triple((
+        subject: Named(Iri("https://yolodev.github.io/semantic-rpg/schema/Source")),
+        predicate: Named(Iri("http://www.w3.org/2000/01/rdf-schema#comment")),
+        object: Literal(Simple("Source containing game rules.")),
+    )),
+    Triple((
+        subject: Named(Iri("https://yolodev.github.io/semantic-rpg/schema/Source")),
+        predicate: Named(Iri("http://www.w3.org/2000/01/rdf-schema#subClassOf")),
+        object: Named(Iri("http://schema.org/CreativeWork")),
+    )),
+]
