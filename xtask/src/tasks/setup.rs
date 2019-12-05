@@ -6,7 +6,7 @@ use structopt::StructOpt;
 pub struct SetupTask {}
 
 impl XTask for SetupTask {
-  fn run(self, common: Common) -> XResult {
+  fn run(self, _common: Common) -> XResult {
     install_git_hook(Mode::Overwrite)?;
 
     Ok(())

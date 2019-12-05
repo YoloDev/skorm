@@ -5,7 +5,6 @@ use nom::{
 };
 use std::fmt;
 use std::ops::RangeFrom;
-use std::sync::atomic::{AtomicU16, Ordering};
 
 pub(super) trait InputLocate {
   fn offset(&self) -> usize;
@@ -21,56 +20,20 @@ pub(crate) struct InputBuf<'a> {
 
   /// Data
   buf: &'a str,
-
-  /// Counter for unnamed blank nodes.
-  blank: &'a AtomicU16,
 }
 
 impl<'a> InputBuf<'a> {
-  pub(super) fn new(buf: &'a [u8], blank: &'a AtomicU16) -> Result<Self, std::str::Utf8Error> {
-    match std::str::from_utf8(buf.as_ref()) {
-      Err(e) => Err(e),
-      Ok(buf) => Ok(Self {
-        pos: 0,
-        end: buf.len(),
-        buf,
-        blank,
-      }),
-    }
-  }
-
-  #[cfg(test)]
-  pub(super) fn new_str(buf: &'a str, blank: &'a AtomicU16) -> Self {
+  pub(super) fn new(buf: &'a str) -> Self {
     Self {
       pos: 0,
       end: buf.len(),
       buf,
-      blank,
     }
-  }
-
-  pub(super) fn next_blank(&self) -> u16 {
-    let num = self.blank.fetch_add(1, Ordering::Relaxed);
-    num
   }
 
   #[inline]
   fn slice(&self) -> &'a str {
     &self.buf[self.pos..self.end]
-  }
-
-  #[inline]
-  pub(super) fn str_to(&self, end: &Self) -> &'a str {
-    if end.pos < self.pos {
-      panic!("end pos was smaller than start pos.");
-    }
-
-    &self.buf[self.pos..end.pos]
-  }
-
-  #[inline]
-  pub(crate) fn pos(&self) -> usize {
-    self.pos
   }
 }
 
@@ -162,7 +125,6 @@ impl<'a> InputTake for InputBuf<'a> {
       pos: self.pos,
       end: new_end,
       buf: self.buf,
-      blank: self.blank,
     }
   }
 
@@ -174,13 +136,11 @@ impl<'a> InputTake for InputBuf<'a> {
         pos: split,
         end: self.end,
         buf: self.buf,
-        blank: self.blank,
       },
       Self {
         pos: self.pos,
         end: split,
         buf: self.buf,
-        blank: self.blank,
       },
     )
   }
@@ -282,7 +242,6 @@ impl<'a> Slice<RangeFrom<usize>> for InputBuf<'a> {
       pos: start,
       end: self.end,
       buf: self.buf,
-      blank: self.blank,
     }
   }
 }

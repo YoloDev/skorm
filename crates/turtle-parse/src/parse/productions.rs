@@ -25,7 +25,7 @@ lazy_static! {
 }
 
 fn next_blank_node<'a>(i: I<'a>) -> BlankNode {
-  BlankNode::anon(i.next_blank_name())
+  BlankNode::anon(i.next_blank())
 }
 
 enum NamedOrBlankNode {

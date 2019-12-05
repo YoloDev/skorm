@@ -1,27 +1,27 @@
 [
     Triple((
-        subject: Blank(("foo")),
+        subject: Blank(Named("foo")),
         predicate: Named(Iri("http://www.w3.org/1999/02/22-rdf-syntax-ns#type")),
         object: Named(Namespaced("rdfs", "Class")),
     )),
     Triple((
-        subject: Blank(("anon-2")),
+        subject: Blank(Anonymous(2)),
         predicate: Named(Namespaced("", "is")),
         object: Named(Namespaced("", "anon")),
     )),
     Triple((
-        subject: Blank(("anon-2")),
+        subject: Blank(Anonymous(2)),
         predicate: Named(Namespaced("", "is")),
         object: Named(Namespaced("", "v2")),
     )),
     Triple((
-        subject: Blank(("anon-2")),
+        subject: Blank(Anonymous(2)),
         predicate: Named(Namespaced("", "also")),
         object: Named(Namespaced("", "fancy")),
     )),
     Triple((
-        subject: Blank(("anon-1")),
+        subject: Blank(Anonymous(1)),
         predicate: Named(Iri("http://www.w3.org/1999/02/22-rdf-syntax-ns#type")),
-        object: Blank(("anon-2")),
+        object: Blank(Anonymous(2)),
     )),
 ]

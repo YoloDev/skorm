@@ -3,14 +3,15 @@ use glob::*;
 use serde::{Deserialize, Serialize};
 use skorm_parse::*;
 use skorm_turtle_parse::*;
-use std::fs::{read, write};
+use std::fs::{create_dir_all, read, write};
 use std::path::Path;
+use std::sync::Arc;
 use url::Url;
 
 #[derive(Serialize, Deserialize, PartialEq, Debug)]
 struct Prefix {
-  prefix: String,
-  url: String,
+  prefix: Arc<str>,
+  url: Arc<str>,
 }
 
 impl FromRdfPrefix for Prefix {
@@ -25,37 +26,43 @@ impl FromRdfPrefix for Prefix {
 
 #[derive(Serialize, Deserialize, PartialEq, Debug)]
 enum NamedNode {
-  Iri(String),
-  Namespaced(String, String),
+  Iri(Arc<str>),
+  Namespaced(Arc<str>, Arc<str>),
 }
 
-impl<'a> From<skorm_parse::NamedNode<'a>> for NamedNode {
-  fn from(n: skorm_parse::NamedNode<'a>) -> Self {
+impl<'a> From<skorm_parse::NamedNode> for NamedNode {
+  fn from(n: skorm_parse::NamedNode) -> Self {
     match n {
       skorm_parse::NamedNode::Iri(i) => Self::Iri(i.to_owned()),
-      skorm_parse::NamedNode::Namespaced(n, i) => Self::Namespaced(n.to_owned(), i.to_owned()),
+      skorm_parse::NamedNode::Prefixed(n, i) => Self::Namespaced(n.to_owned(), i.to_owned()),
     }
   }
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Debug)]
-struct BlankNode(String);
+enum BlankNode {
+  Named(Arc<str>),
+  Anonymous(u32),
+}
 
-impl<'a> From<skorm_parse::BlankNode<'a>> for BlankNode {
-  fn from(n: skorm_parse::BlankNode<'a>) -> Self {
-    BlankNode(n.0.to_owned())
+impl<'a> From<skorm_parse::BlankNode> for BlankNode {
+  fn from(n: skorm_parse::BlankNode) -> Self {
+    match n {
+      skorm_parse::BlankNode::Named(n) => BlankNode::Named(n),
+      skorm_parse::BlankNode::Anonymous(n) => BlankNode::Anonymous(n),
+    }
   }
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Debug)]
 enum Literal {
-  Simple(String),
-  Typed(String, NamedNode),
-  LangTagged(String, String),
+  Simple(Arc<str>),
+  Typed(Arc<str>, NamedNode),
+  LangTagged(Arc<str>, Arc<str>),
 }
 
-impl<'a> From<skorm_parse::Literal<'a>> for Literal {
-  fn from(lit: skorm_parse::Literal<'a>) -> Self {
+impl<'a> From<skorm_parse::Literal> for Literal {
+  fn from(lit: skorm_parse::Literal) -> Self {
     match lit {
       skorm_parse::Literal::Simple(s) => Literal::Simple(s.to_owned()),
       skorm_parse::Literal::Typed(s, n) => Literal::Typed(s.to_owned(), n.into()),
@@ -135,8 +142,8 @@ enum Statement {
 impl FromRdfStatement for Statement {
   fn from_statement(statement: &impl AsRdfStatement) -> Self {
     match statement.as_statement() {
-      skorm_parse::Statement::Prefix(p) => Statement::Prefix(Prefix::from_prefix(p)),
-      skorm_parse::Statement::Triple(t) => Statement::Triple(Triple::from_triple(t)),
+      skorm_parse::Statement::Prefix(p) => Statement::Prefix(Prefix::from_prefix(&p)),
+      skorm_parse::Statement::Triple(t) => Statement::Triple(Triple::from_triple(&t)),
     }
   }
 }
@@ -151,7 +158,13 @@ fn test_file(path: &Path) {
     statements.push(Statement::from_statement(&converted));
   }
 
-  let out_file = path.with_extension("ron");
+  let dir = path.parent().unwrap();
+  let out_dir = dir.join(".out");
+  if !out_dir.exists() {
+    create_dir_all(&out_dir).unwrap();
+  }
+  let mut out_file = out_dir.join(path.file_name().unwrap());
+  out_file.set_extension("ron");
   if out_file.is_file() {
     let content = read(&out_file).unwrap();
     let parsed: Vec<Statement> = ron::de::from_bytes(&content).unwrap();

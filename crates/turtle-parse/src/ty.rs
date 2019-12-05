@@ -47,8 +47,8 @@ pub enum NamedNode {
 impl NamedNode {
   fn as_rdf(&self) -> RdfNamedNode {
     match self {
-      NamedNode::Namespaced(ns, n) => RdfNamedNode::namespaced(&ns, &n),
-      NamedNode::Iri(n) => RdfNamedNode::iri(&n),
+      NamedNode::Namespaced(ns, n) => RdfNamedNode::prefixed(ns.clone(), n.clone()),
+      NamedNode::Iri(n) => RdfNamedNode::iri(n.clone()),
     }
   }
 
@@ -87,8 +87,8 @@ impl BlankNode {
 
   fn as_rdf(&self) -> RdfBlankNode {
     match self {
-      Self::Named(n) => RdfBlankNode::new(&n),
-      Self::Anon(_, s) => RdfBlankNode::new(&s),
+      Self::Named(n) => RdfBlankNode::new(n.clone()),
+      Self::Anon(n, _) => RdfBlankNode::new_anon(*n as u32),
     }
   }
 }
@@ -113,9 +113,9 @@ pub enum Literal {
 impl Literal {
   fn as_rdf(&self) -> RdfLiteral {
     match self {
-      Literal::Simple(n) => RdfLiteral::simple(&n),
-      Literal::Typed(n, t) => RdfLiteral::typed(&n, t.as_rdf()),
-      Literal::LangTagged(n, l) => RdfLiteral::lang_tagged(&n, &l),
+      Literal::Simple(n) => RdfLiteral::simple(n.clone()),
+      Literal::Typed(n, t) => RdfLiteral::typed(n.clone(), t.as_rdf()),
+      Literal::LangTagged(n, l) => RdfLiteral::lang_tagged(n.clone(), l.clone()),
       _ => unimplemented!(),
     }
   }
@@ -337,7 +337,7 @@ impl ToAbsolute for Prefix {
 
 impl AsRdfPrefix for Prefix {
   fn as_prefix(&self) -> RdfPrefix {
-    RdfPrefix::new(&self.0, &self.1)
+    RdfPrefix::new(self.0.clone(), self.1.clone())
   }
 }
 
@@ -386,8 +386,8 @@ impl AsRdfStatement for Statement {
   fn as_statement(&self) -> RdfStatement<Prefix, Triple> {
     match self {
       Statement::Base(_) => unreachable!(),
-      Statement::Prefix(p) => RdfStatement::Prefix(p),
-      Statement::Triple(t) => RdfStatement::Triple(t),
+      Statement::Prefix(p) => RdfStatement::Prefix(p.clone()),
+      Statement::Triple(t) => RdfStatement::Triple(t.clone()),
     }
   }
 }

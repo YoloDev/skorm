@@ -8,4 +8,5 @@ edition = "2018"
 
 [dependencies]
 bytes = "0.4"
+lazy_static = "1"
 skorm-core = { version = "0.1", path = "../core" }

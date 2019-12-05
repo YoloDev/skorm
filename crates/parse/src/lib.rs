@@ -1,54 +1,39 @@
+#![feature(type_alias_impl_trait)]
+
 mod ty;
 
 pub use bytes::BytesMut;
 pub use ty::*;
 
-pub enum Statement<'a, P, T>
+#[derive(Clone)]
+pub enum Statement<P, T>
 where
-  P: AsRdfPrefix,
-  T: AsRdfTriple,
+  P: AsRdfPrefix + Clone,
+  T: AsRdfTriple + Clone,
 {
-  Prefix(&'a P),
-  Triple(&'a T),
+  Prefix(P),
+  Triple(T),
 }
 
-impl<'a, P, T> Clone for Statement<'a, P, T>
+impl<'s, P, T> AsRdfStatement for Statement<P, T>
 where
-  P: AsRdfPrefix,
-  T: AsRdfTriple,
-{
-  #[inline]
-  fn clone(&self) -> Self {
-    *self
-  }
-}
-
-impl<'a, P, T> Copy for Statement<'a, P, T>
-where
-  P: AsRdfPrefix,
-  T: AsRdfTriple,
-{
-}
-
-impl<'s, P, T> AsRdfStatement for Statement<'s, P, T>
-where
-  P: AsRdfPrefix,
-  T: AsRdfTriple,
+  P: AsRdfPrefix + Clone,
+  T: AsRdfTriple + Clone,
 {
   type Prefix = P;
   type Triple = T;
 
   #[inline]
-  fn as_statement<'a>(&'a self) -> Statement<'a, P, T> {
-    *self
+  fn as_statement(&self) -> Statement<P, T> {
+    self.clone()
   }
 }
 
 pub trait AsRdfStatement {
-  type Prefix: AsRdfPrefix;
-  type Triple: AsRdfTriple;
+  type Prefix: AsRdfPrefix + Clone;
+  type Triple: AsRdfTriple + Clone;
 
-  fn as_statement<'a>(&'a self) -> Statement<'a, Self::Prefix, Self::Triple>;
+  fn as_statement(&self) -> Statement<Self::Prefix, Self::Triple>;
 }
 
 pub trait FromRdfStatement {
@@ -112,6 +97,70 @@ pub trait RdfParser {
       None if buf.is_empty() => Ok(None),
       None => {
         Err(std::io::Error::new(std::io::ErrorKind::Other, "bytes remaining on stream").into())
+      }
+    }
+  }
+}
+
+/// Trait implemented by stores that want to
+/// accept rdf triples from multiple parsers.
+///
+/// When dealing with multiple parsers, one has
+/// to care about the fact that they all can use
+/// the same blank id name, but not reffer to the
+/// same blank node. Each sink produced by `as_sink`
+/// in this trait, typically has it's own mapping
+/// of blank node name => id.
+pub trait AsRdfParserSink<'a> {
+  type Sink: RdfParserSink + 'a;
+
+  fn as_sink(&'a mut self) -> Self::Sink;
+}
+
+pub trait RdfParserSink {
+  type Error;
+
+  fn insert(&mut self, item: &impl AsRdfStatement) -> Result<(), Self::Error>;
+}
+
+pub trait RdfParserExt: RdfParser + Sized {
+  type Iter: Iterator<Item = Result<Self::Item, Self::Error>>;
+
+  fn into_iter(self, data: BytesMut) -> Self::Iter;
+}
+
+impl<P: RdfParser> RdfParserExt for P {
+  type Iter = ParserIter<P>;
+
+  #[inline]
+  fn into_iter(self, data: BytesMut) -> Self::Iter {
+    ParserIter {
+      parser: self,
+      data,
+      done: false,
+    }
+  }
+}
+
+pub struct ParserIter<P: RdfParser> {
+  parser: P,
+  data: BytesMut,
+  done: bool,
+}
+
+impl<P: RdfParser> Iterator for ParserIter<P> {
+  type Item = Result<<P as RdfParser>::Item, <P as RdfParser>::Error>;
+
+  fn next(&mut self) -> Option<Self::Item> {
+    if self.done {
+      None
+    } else {
+      match self.parser.end(&mut self.data) {
+        Ok(item) => item.map(Ok),
+        Err(e) => {
+          self.done = true;
+          Some(Err(e))
+        }
       }
     }
   }

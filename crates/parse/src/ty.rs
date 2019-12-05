@@ -1,7 +1,10 @@
 use crate::{
   AsRdfObject, AsRdfPredicate, AsRdfPrefix, AsRdfStatement, AsRdfSubject, AsRdfTriple, Statement,
 };
+use lazy_static::lazy_static;
+use std::sync::Arc;
 
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Never {}
 
 impl AsRdfTriple for Never {
@@ -40,289 +43,217 @@ impl AsRdfObject for Never {
 }
 
 macro_rules! display {
-  (impl<'a> Display for $name:ident<'a> {
+  (impl Display for $name:ident {
     fn fmt(&$self:ident, $f:ident: &mut Formatter) -> Result $code:block
   }) => {
-    impl<'a> ::std::fmt::Display for $name<'a> {
+    impl ::std::fmt::Display for $name {
       fn fmt($self: &Self, $f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result $code
     }
 
-    impl<'a> ::std::fmt::Debug for $name<'a> {
+    impl ::std::fmt::Debug for $name {
       fn fmt($self: &Self, $f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result $code
     }
   };
 }
 
-#[derive(Clone, Copy)]
-pub struct Prefix<'a> {
-  pub prefix: &'a str,
-  pub uri: &'a str,
+#[derive(Clone, PartialEq, Eq, Hash)]
+pub struct Prefix {
+  pub prefix: Arc<str>,
+  pub uri: Arc<str>,
 }
 
-impl<'a> Prefix<'a> {
+impl Prefix {
   #[inline]
-  pub const fn new(prefix: &'a str, uri: &'a str) -> Self {
+  pub const fn new(prefix: Arc<str>, uri: Arc<str>) -> Self {
     Self { prefix, uri }
   }
 }
 
 display! {
-  impl<'a> Display for Prefix<'a> {
+  impl Display for Prefix {
     fn fmt(&self, f: &mut Formatter) -> Result {
       write!(f, "@prefix {} <{}> .", &self.prefix, &self.uri)
     }
   }
 }
 
-impl<'a> AsRdfPrefix for Prefix<'a> {
+impl AsRdfPrefix for Prefix {
   #[inline]
   fn as_prefix(&self) -> Prefix {
-    *self
+    self.clone()
   }
 }
 
-impl<'a> AsRdfStatement for Prefix<'a> {
+impl AsRdfStatement for Prefix {
   type Prefix = Self;
   type Triple = Never;
 
   #[inline]
-  fn as_statement<'s>(&'s self) -> Statement<'s, Self::Prefix, Self::Triple> {
-    Statement::Prefix(self)
+  fn as_statement(&self) -> Statement<Self::Prefix, Self::Triple> {
+    Statement::Prefix(self.clone())
   }
 }
 
-#[derive(Clone, Copy)]
-pub enum NamedNode<'a> {
-  Iri(&'a str),
-  Namespaced(&'a str, &'a str),
+#[derive(Clone, PartialEq, Eq, Hash)]
+pub enum NamedNode {
+  Iri(Arc<str>),
+  Prefixed(Arc<str>, Arc<str>),
 }
 
-impl<'a> AsRdfSubject for NamedNode<'a> {
+impl AsRdfSubject for NamedNode {
   #[inline]
   fn as_subject(&self) -> Subject {
-    Subject::named(*self)
+    Subject::named(self.clone())
   }
 }
 
-impl<'a> AsRdfPredicate for NamedNode<'a> {
+impl AsRdfPredicate for NamedNode {
   #[inline]
   fn as_predicate(&self) -> Predicate {
-    Predicate::new(*self)
+    Predicate::new(self.clone())
   }
 }
 
-impl<'a> AsRdfObject for NamedNode<'a> {
+impl AsRdfObject for NamedNode {
   #[inline]
   fn as_object(&self) -> Object {
-    Object::named(*self)
+    Object::named(self.clone())
   }
 }
 
-impl<'a> NamedNode<'a> {
+impl NamedNode {
   #[inline]
-  pub const fn iri(value: &'a str) -> Self {
+  pub const fn iri(value: Arc<str>) -> Self {
     Self::Iri(value)
   }
 
   #[inline]
-  pub const fn namespaced(namespace: &'a str, value: &'a str) -> Self {
-    Self::Namespaced(namespace, value)
-  }
-
-  #[inline]
-  pub fn is_iri(&self) -> bool {
-    match self {
-      Self::Iri(_) => true,
-      Self::Namespaced(_, _) => false,
-    }
-  }
-
-  #[inline]
-  pub fn is_namespaced(&self) -> bool {
-    match self {
-      Self::Iri(_) => true,
-      Self::Namespaced(_, _) => false,
-    }
-  }
-
-  #[inline]
-  pub fn as_iri(&self) -> Option<&'a str> {
-    match self {
-      Self::Iri(s) => Some(s),
-      Self::Namespaced(_, _) => None,
-    }
-  }
-
-  #[inline]
-  pub fn as_namespaced(&self) -> Option<(&'a str, &'a str)> {
-    match self {
-      Self::Iri(_) => None,
-      Self::Namespaced(ns, s) => Some((ns, s)),
-    }
+  pub const fn prefixed(namespace: Arc<str>, value: Arc<str>) -> Self {
+    Self::Prefixed(namespace, value)
   }
 }
 
 display! {
-  impl<'a> Display for NamedNode<'a> {
+  impl Display for NamedNode {
     fn fmt(&self, f: &mut Formatter) -> Result {
       match self {
         Self::Iri(s) => write!(f, "<{}>", s),
-        Self::Namespaced(ns, s) => write!(f, "{}:{}", ns, s),
+        Self::Prefixed(ns, s) => write!(f, "{}:{}", ns, s),
       }
     }
   }
 }
 
-#[derive(Clone, Copy)]
-pub struct BlankNode<'a>(pub &'a str);
+#[derive(Clone, PartialEq, Eq, Hash)]
+pub enum BlankNode {
+  Named(Arc<str>),
+  Anonymous(u32),
+}
 
-impl<'a> AsRdfSubject for BlankNode<'a> {
+impl AsRdfSubject for BlankNode {
   #[inline]
   fn as_subject(&self) -> Subject {
-    Subject::blank(*self)
+    Subject::blank(self.clone())
   }
 }
 
-impl<'a> AsRdfObject for BlankNode<'a> {
+impl AsRdfObject for BlankNode {
   #[inline]
   fn as_object(&self) -> Object {
-    Object::blank(*self)
+    Object::blank(self.clone())
   }
 }
 
-impl<'a> BlankNode<'a> {
+impl BlankNode {
   #[inline]
-  pub fn new(name: &'a str) -> Self {
-    Self(name)
+  pub const fn new(name: Arc<str>) -> Self {
+    Self::Named(name)
+  }
+
+  #[inline]
+  pub const fn new_anon(id: u32) -> Self {
+    Self::Anonymous(id)
   }
 }
 
 display! {
-  impl<'a> Display for BlankNode<'a> {
+  impl Display for BlankNode {
     fn fmt(&self, f: &mut Formatter) -> Result {
-      write!(f, "_:{}", &self.0)
+      match self {
+        Self::Named(n) => write!(f, "_:{}", n),
+        Self::Anonymous(n) => write!(f, "_:anon-{}", n),
+      }
     }
   }
 }
 
-const STRING_TYPE: NamedNode<'static> = NamedNode::iri("http://www.w3.org/2001/XMLSchema#string");
-const LANG_STRING_TYPE: NamedNode<'static> =
-  NamedNode::iri("http://www.w3.org/1999/02/22-rdf-syntax-ns#langString");
-
-#[derive(Clone, Copy)]
-pub enum Literal<'a> {
-  Simple(&'a str),
-  Typed(&'a str, NamedNode<'a>),
-  LangTagged(&'a str, &'a str),
+lazy_static! {
+  static ref STRING_TYPE: NamedNode =
+    NamedNode::iri("http://www.w3.org/2001/XMLSchema#string".into());
+  static ref LANG_STRING_TYPE: NamedNode =
+    NamedNode::iri("http://www.w3.org/1999/02/22-rdf-syntax-ns#langString".into());
 }
 
-impl<'a> AsRdfObject for Literal<'a> {
+#[derive(Clone, PartialEq, Eq, Hash)]
+pub enum Literal {
+  Simple(Arc<str>),
+  Typed(Arc<str>, NamedNode),
+  LangTagged(Arc<str>, Arc<str>),
+}
+
+impl AsRdfObject for Literal {
   #[inline]
   fn as_object(&self) -> Object {
-    Object::literal(*self)
+    Object::literal(self.clone())
   }
 }
 
-impl<'a> Literal<'a> {
+impl Literal {
   #[inline]
-  pub const fn simple(value: &'a str) -> Self {
+  pub const fn simple(value: Arc<str>) -> Self {
     Self::Simple(value)
   }
 
   #[inline]
-  pub const fn typed(value: &'a str, ty: NamedNode<'a>) -> Self {
+  pub const fn typed(value: Arc<str>, ty: NamedNode) -> Self {
     Self::Typed(value, ty)
   }
 
   #[inline]
-  pub const fn lang_tagged(value: &'a str, lang: &'a str) -> Self {
+  pub const fn lang_tagged(value: Arc<str>, lang: Arc<str>) -> Self {
     Self::LangTagged(value, lang)
   }
 
   #[inline]
-  pub fn value(&self) -> &'a str {
+  pub fn value(&self) -> &str {
     match self {
-      Self::Simple(v) => v,
-      Self::Typed(v, _) => v,
-      Self::LangTagged(v, _) => v,
+      Self::Simple(v) => &v,
+      Self::Typed(v, _) => &v,
+      Self::LangTagged(v, _) => &v,
     }
   }
 
   #[inline]
-  pub fn datatype(&self) -> NamedNode<'a> {
+  pub fn datatype(&self) -> NamedNode {
     match self {
-      Self::Simple(_) => STRING_TYPE,
-      Self::Typed(_, t) => *t,
-      Self::LangTagged(_, _) => LANG_STRING_TYPE,
+      Self::Simple(_) => STRING_TYPE.clone(),
+      Self::Typed(_, t) => t.clone(),
+      Self::LangTagged(_, _) => LANG_STRING_TYPE.clone(),
     }
   }
 
   #[inline]
-  pub fn lang(&self) -> Option<&'a str> {
+  pub fn lang(&self) -> Option<&str> {
     match self {
       Self::Simple(_) => None,
       Self::Typed(_, _) => None,
-      Self::LangTagged(_, l) => Some(l),
-    }
-  }
-
-  #[inline]
-  pub fn is_simple(&self) -> bool {
-    match self {
-      Self::Simple(_) => true,
-      Self::Typed(_, _) => false,
-      Self::LangTagged(_, _) => false,
-    }
-  }
-
-  #[inline]
-  pub fn is_typed(&self) -> bool {
-    match self {
-      Self::Simple(_) => false,
-      Self::Typed(_, _) => true,
-      Self::LangTagged(_, _) => false,
-    }
-  }
-
-  #[inline]
-  pub fn is_lang_tagged(&self) -> bool {
-    match self {
-      Self::Simple(_) => false,
-      Self::Typed(_, _) => false,
-      Self::LangTagged(_, _) => true,
-    }
-  }
-
-  #[inline]
-  pub fn as_simple(&self) -> Option<&'a str> {
-    match self {
-      Self::Simple(v) => Some(v),
-      Self::Typed(_, _) => None,
-      Self::LangTagged(_, _) => None,
-    }
-  }
-
-  #[inline]
-  pub fn as_typed(&self) -> Option<(&'a str, NamedNode<'a>)> {
-    match self {
-      Self::Simple(_) => None,
-      Self::Typed(v, t) => Some((v, *t)),
-      Self::LangTagged(_, _) => None,
-    }
-  }
-
-  #[inline]
-  pub fn as_lang_tagged(&self) -> Option<(&'a str, &'a str)> {
-    match self {
-      Self::Simple(_) => None,
-      Self::Typed(_, _) => None,
-      Self::LangTagged(v, l) => Some((v, l)),
+      Self::LangTagged(_, l) => Some(&l),
     }
   }
 }
 
 display! {
-  impl<'a> Display for Literal<'a> {
+  impl Display for Literal {
     fn fmt(&self, f: &mut Formatter) -> Result {
       match self {
         Self::Simple(s) => write!(f, "\"{}\"", s),
@@ -333,27 +264,27 @@ display! {
   }
 }
 
-#[derive(Clone, Copy)]
-pub enum Subject<'a> {
-  Named(NamedNode<'a>),
-  Blank(BlankNode<'a>),
+#[derive(Clone, PartialEq, Eq, Hash)]
+pub enum Subject {
+  Named(NamedNode),
+  Blank(BlankNode),
 }
 
-impl<'a> AsRdfSubject for Subject<'a> {
+impl AsRdfSubject for Subject {
   #[inline]
   fn as_subject(&self) -> Subject {
-    *self
+    self.clone()
   }
 }
 
-impl<'a> Subject<'a> {
+impl Subject {
   #[inline]
-  pub const fn named(n: NamedNode<'a>) -> Self {
+  pub const fn named(n: NamedNode) -> Self {
     Self::Named(n)
   }
 
   #[inline]
-  pub const fn blank(n: BlankNode<'a>) -> Self {
+  pub const fn blank(n: BlankNode) -> Self {
     Self::Blank(n)
   }
 
@@ -374,38 +305,38 @@ impl<'a> Subject<'a> {
   }
 
   #[inline]
-  pub fn as_named(&self) -> Option<NamedNode<'a>> {
+  pub fn as_named(&self) -> Option<NamedNode> {
     match &self {
-      Self::Named(n) => Some(*n),
+      Self::Named(n) => Some(n.clone()),
       Self::Blank(_) => None,
     }
   }
 
   #[inline]
-  pub fn as_blank(&self) -> Option<BlankNode<'a>> {
+  pub fn as_blank(&self) -> Option<BlankNode> {
     match &self {
       Self::Named(_) => None,
-      Self::Blank(n) => Some(*n),
+      Self::Blank(n) => Some(n.clone()),
     }
   }
 }
 
-impl<'a> From<NamedNode<'a>> for Subject<'a> {
+impl From<NamedNode> for Subject {
   #[inline]
-  fn from(n: NamedNode<'a>) -> Self {
+  fn from(n: NamedNode) -> Self {
     Self::Named(n)
   }
 }
 
-impl<'a> From<BlankNode<'a>> for Subject<'a> {
+impl From<BlankNode> for Subject {
   #[inline]
-  fn from(n: BlankNode<'a>) -> Self {
+  fn from(n: BlankNode) -> Self {
     Self::Blank(n)
   }
 }
 
 display! {
-  impl<'a> Display for Subject<'a> {
+  impl Display for Subject {
     fn fmt(&self, f: &mut Formatter) -> Result {
       match self {
         Self::Named(n) => std::fmt::Display::fmt(n, f),
@@ -415,146 +346,92 @@ display! {
   }
 }
 
-#[derive(Clone, Copy)]
-pub struct Predicate<'a>(pub NamedNode<'a>);
+#[derive(Clone, PartialEq, Eq, Hash)]
+pub struct Predicate(pub NamedNode);
 
-impl<'a> AsRdfPredicate for Predicate<'a> {
+impl AsRdfPredicate for Predicate {
   #[inline]
   fn as_predicate(&self) -> Predicate {
-    *self
+    self.clone()
   }
 }
 
-impl<'a> Predicate<'a> {
+impl Predicate {
   #[inline]
-  pub const fn new(n: NamedNode<'a>) -> Self {
+  pub const fn new(n: NamedNode) -> Self {
     Self(n)
   }
 }
 
-impl<'a> From<NamedNode<'a>> for Predicate<'a> {
+impl From<NamedNode> for Predicate {
   #[inline]
-  fn from(n: NamedNode<'a>) -> Self {
+  fn from(n: NamedNode) -> Self {
     Self(n)
   }
 }
 
 display! {
-  impl<'a> Display for Predicate<'a> {
+  impl Display for Predicate {
     fn fmt(&self, f: &mut Formatter) -> Result {
       std::fmt::Display::fmt(&self.0, f)
     }
   }
 }
 
-#[derive(Clone, Copy)]
-pub enum Object<'a> {
-  Named(NamedNode<'a>),
-  Blank(BlankNode<'a>),
-  Literal(Literal<'a>),
+#[derive(Clone, PartialEq, Eq, Hash)]
+pub enum Object {
+  Named(NamedNode),
+  Blank(BlankNode),
+  Literal(Literal),
 }
 
-impl<'a> AsRdfObject for Object<'a> {
+impl AsRdfObject for Object {
   #[inline]
   fn as_object(&self) -> Object {
-    *self
+    self.clone()
   }
 }
 
-impl<'a> Object<'a> {
+impl Object {
   #[inline]
-  pub const fn named(n: NamedNode<'a>) -> Self {
+  pub const fn named(n: NamedNode) -> Self {
     Self::Named(n)
   }
 
   #[inline]
-  pub const fn blank(n: BlankNode<'a>) -> Self {
+  pub const fn blank(n: BlankNode) -> Self {
     Self::Blank(n)
   }
 
   #[inline]
-  pub const fn literal(n: Literal<'a>) -> Self {
+  pub const fn literal(n: Literal) -> Self {
     Self::Literal(n)
   }
-
-  #[inline]
-  pub fn is_named(&self) -> bool {
-    match self {
-      Self::Named(_) => true,
-      Self::Blank(_) => false,
-      Self::Literal(_) => false,
-    }
-  }
-
-  #[inline]
-  pub fn is_blank(&self) -> bool {
-    match self {
-      Self::Named(_) => false,
-      Self::Blank(_) => true,
-      Self::Literal(_) => false,
-    }
-  }
-
-  #[inline]
-  pub fn is_literal(&self) -> bool {
-    match self {
-      Self::Named(_) => false,
-      Self::Blank(_) => false,
-      Self::Literal(_) => true,
-    }
-  }
-
-  #[inline]
-  pub fn as_named(&self) -> Option<NamedNode<'a>> {
-    match self {
-      Self::Named(n) => Some(*n),
-      Self::Blank(_) => None,
-      Self::Literal(_) => None,
-    }
-  }
-
-  #[inline]
-  pub fn as_blank(&self) -> Option<BlankNode<'a>> {
-    match self {
-      Self::Named(_) => None,
-      Self::Blank(n) => Some(*n),
-      Self::Literal(_) => None,
-    }
-  }
-
-  #[inline]
-  pub fn as_literal(&self) -> Option<Literal<'a>> {
-    match self {
-      Self::Named(_) => None,
-      Self::Blank(_) => None,
-      Self::Literal(n) => Some(*n),
-    }
-  }
 }
 
-impl<'a> From<NamedNode<'a>> for Object<'a> {
+impl From<NamedNode> for Object {
   #[inline]
-  fn from(n: NamedNode<'a>) -> Self {
+  fn from(n: NamedNode) -> Self {
     Self::Named(n)
   }
 }
 
-impl<'a> From<BlankNode<'a>> for Object<'a> {
+impl From<BlankNode> for Object {
   #[inline]
-  fn from(n: BlankNode<'a>) -> Self {
+  fn from(n: BlankNode) -> Self {
     Self::Blank(n)
   }
 }
 
-impl<'a> From<Literal<'a>> for Object<'a> {
+impl From<Literal> for Object {
   #[inline]
-  fn from(n: Literal<'a>) -> Self {
+  fn from(n: Literal) -> Self {
     Self::Literal(n)
   }
 }
 
 display! {
-  impl<'a> Display for Object<'a> {
+  impl Display for Object {
     fn fmt(&self, f: &mut Formatter) -> Result {
       match self {
         Self::Named(n) => std::fmt::Display::fmt(n, f),
