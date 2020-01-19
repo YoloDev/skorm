@@ -1,3 +1,5 @@
+#![feature(never_type)]
+
 pub mod display;
 
 use std::num::NonZeroU32;

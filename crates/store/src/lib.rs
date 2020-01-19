@@ -1,5 +1,6 @@
 #![feature(type_alias_impl_trait)]
 #![feature(specialization)]
+#![feature(never_type)]
 
 pub mod query;
 pub(crate) mod store;

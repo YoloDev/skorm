@@ -1,3 +1,6 @@
+#![feature(custom_test_frameworks)]
+#![test_runner(datatest::runner)]
+
 use bytes::BytesMut;
 use glob::*;
 use serde::{Deserialize, Serialize};
@@ -148,9 +151,12 @@ impl FromRdfStatement for Statement {
   }
 }
 
-fn test_file(path: &Path) {
-  let content = read(path).unwrap();
-  let mut bytes = BytesMut::from(content);
+#[datatest::files("tests/cases", {
+  input in r"^(.*)\.ttl$",
+  output = r"${1}.ron",
+})]
+fn test_case(input: &[u8], output: &Path) {
+  let mut bytes = BytesMut::from(input);
   let mut parser = TurtleParser::new(Url::parse("http://example.com/").unwrap());
   let mut statements = Vec::new();
   while let Some(statement) = parser.end(&mut bytes).unwrap() {
@@ -158,29 +164,13 @@ fn test_file(path: &Path) {
     statements.push(Statement::from_statement(&converted));
   }
 
-  let dir = path.parent().unwrap();
-  let out_dir = dir.join(".out");
-  if !out_dir.exists() {
-    create_dir_all(&out_dir).unwrap();
-  }
-  let mut out_file = out_dir.join(path.file_name().unwrap());
-  out_file.set_extension("ron");
-  if out_file.is_file() {
-    let content = read(&out_file).unwrap();
+  if output.is_file() {
+    let content = read(&output).unwrap();
     let parsed: Vec<Statement> = ron::de::from_bytes(&content).unwrap();
     assert_eq!(statements, parsed);
   } else {
     let serialized =
       ron::ser::to_string_pretty(&statements, ron::ser::PrettyConfig::default()).unwrap();
-    write(out_file, serialized).unwrap();
-  }
-}
-
-#[test]
-fn test_cases() {
-  for entry in glob("tests/cases/**/*.ttl").unwrap() {
-    let entry = entry.unwrap();
-    print!("{}", entry.display());
-    test_file(&entry);
+    write(output, serialized).unwrap();
   }
 }

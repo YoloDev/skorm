@@ -5,7 +5,7 @@ mod error;
 pub(crate) mod parse;
 mod ty;
 
-use bytes::BufMut;
+use bytes::{Buf, BufMut};
 use skorm_parse::*;
 use std::sync::atomic::AtomicU16;
 use ty::ToAbsolute;
