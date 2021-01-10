@@ -9,7 +9,7 @@ edition = "2018"
 [dependencies]
 evitable = "0.5"
 im = "14"
-itertools = "0.8"
+itertools = "0.10"
 lazy_static = "1"
 nom = "5"
 salsa = "0.14"
