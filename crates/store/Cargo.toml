@@ -12,7 +12,7 @@ im = "14"
 itertools = "0.10"
 lazy_static = "1"
 nom = "5"
-salsa = "0.14"
+salsa = "0.16"
 smallvec = "1"
 skorm-core = { version = "0.1", path = "../core" }
 skorm-parse = { version = "0.1", path = "../parse" }
