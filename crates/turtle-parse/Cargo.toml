@@ -19,6 +19,6 @@ skorm-parse = { version = "0.1", path = "../parse" }
 
 [dev-dependencies]
 serde = { version="1", features = ["rc"] }
-ron = "0.5"
+ron = "0.6"
 glob = "0.3"
 datatest = "0.6"
