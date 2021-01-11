@@ -8,7 +8,7 @@ edition = "2018"
 
 [dependencies]
 evitable = "0.5"
-im = "14"
+im = "15"
 itertools = "0.10"
 lazy_static = "1"
 nom = "5"
