@@ -13,7 +13,7 @@ lazy_static = "1"
 nom = "6"
 rust_decimal = { version = "1", default-features = false }
 smallvec = { version="1", features = ["union"] }
-string = "0.2"
+string = "0.3"
 url = "2"
 skorm-parse = { version = "0.1", path = "../parse" }
 
