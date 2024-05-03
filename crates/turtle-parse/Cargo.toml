@@ -9,7 +9,7 @@ edition = "2018"
 [dependencies]
 bytes = "1.0"
 evitable = "0.5"
-lazy_static = "1"
+lazy_static = "1.4.0"
 nom = "6"
 rust_decimal = { version = "1", default-features = false }
 smallvec = { version="1", features = ["union"] }
