@@ -10,7 +10,7 @@ edition = "2018"
 bytes = "1.0"
 evitable = "0.5"
 lazy_static = "1"
-nom = "6"
+nom = "7"
 rust_decimal = { version = "1", default-features = false }
 smallvec = { version="1", features = ["union"] }
 string = "0.2"
