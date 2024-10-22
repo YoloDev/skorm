@@ -18,7 +18,7 @@ url = "2"
 skorm-parse = { version = "0.1", path = "../parse" }
 
 [dev-dependencies]
-serde = { version="1", features = ["rc"] }
+serde = { version="1.0.200", features = ["rc"] }
 ron = "0.6"
 glob = "0.3"
 datatest = "0.6"
